@@ -58,10 +58,14 @@ def create_note(post):
 	# TODO: create attachments from WP urls (images, etc.)
 	# TODO: update body URL's to match attachment targets
 	
+	# clean-up the post's text
+	scrubbed_content = post['text'].encode('utf-8')
+	scrubbed_content = scrubbed_content.replace('\n', '<br/>')
+	
 	# set the body
 	note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
 	note.content += '<en-note>'
-	note.content += post['text']
+	note.content += scrubbed_content #post['text'].replace('\n', '<br/>')
 	note.content += '</en-note>'
 	
 	return note
@@ -84,8 +88,7 @@ for node in dom.getElementsByTagName('item'):
 	post = get_post(node)
 	posts.append(post)
 	
-# debug
-#print posts[11]
+print 'processing %d posts' % len(posts)
 
 # generate notes
 notes = []
@@ -93,10 +96,11 @@ for post in posts:
 	notes.append(create_note(post))
 	
 # debug
-print notes[11]
+#print notes[517]
+#print notes[11]
 
 # try uploading one
-upload_note(notes[11])
+upload_note(notes[517])
 
 
 
