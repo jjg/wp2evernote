@@ -48,8 +48,15 @@ def create_note(post):
 	# set the title
 	note.title = post['title']
 	
-	# create attachments from WP urls (images, etc.)
-	# update body URL's to match attachment targets
+	# add tags
+	for tag in post['tags']:
+		tag = Types.Tag()
+		tag.name = tag
+		note.tags.append(tag)
+	
+	# TODO: create attachments from WP urls (images, etc.)
+	# TODO: update body URL's to match attachment targets
+	
 	# set the body
 	note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
 	note.content += post['text']
