@@ -49,10 +49,11 @@ def create_note(post):
 	note.title = post['title']
 	
 	# add tags
+	tags = []
 	for tag in post['tags']:
-		tag = Types.Tag()
-		tag.name = tag
-		note.tags.append(tag)
+		tags.append(tag)
+		
+	note.tagNames = tags
 	
 	# TODO: create attachments from WP urls (images, etc.)
 	# TODO: update body URL's to match attachment targets
