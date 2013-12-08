@@ -60,7 +60,9 @@ def create_note(post):
 	
 	# set the body
 	note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
+	note.content += '<en-note>'
 	note.content += post['text']
+	note.content += '</en-note>'
 	
 	return note
 	
@@ -83,7 +85,7 @@ for node in dom.getElementsByTagName('item'):
 	posts.append(post)
 	
 # debug
-print posts[10]
+#print posts[11]
 
 # generate notes
 notes = []
@@ -91,7 +93,12 @@ for post in posts:
 	notes.append(create_note(post))
 	
 # debug
-print notes[10]
+print notes[11]
+
+# try uploading one
+upload_note(notes[11])
+
+
 
 
 
