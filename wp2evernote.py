@@ -38,6 +38,7 @@ def create_note(post):
 
 	# create a new note
 	note = Types.Note()
+	note.notebookGuid = notebook_guid
 	
 	# set the date (converted from ex: Wed, 28 Aug 2013 15:08:10 +0000)
 	pattern = '%a, %d %b %Y %H:%M:%S +0000'
@@ -114,6 +115,20 @@ if len(sys.argv) >= 3:
 
 	# get the auth token
 	auth_token = sys.argv[1]
+	
+	# ask user to pick a notebook
+	client = EvernoteClient(token=auth_token)
+	noteStore = client.get_note_store()
+	notebooks = noteStore.listNotebooks()
+	
+	notebook_idx = 0
+	print('Select a notebook to upload to:')
+	for n in notebooks:
+		print '%d - %s' % (notebook_idx, n.name)
+		notebook_idx += 1
+		
+	selected_notebook = int(raw_input('>'))
+	notebook_guid = notebooks[selected_notebook].guid
 	
 	# get the export file to process
 	infile = sys.argv[2]
