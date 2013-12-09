@@ -18,3 +18,10 @@ Next you'll see a list of each post and it's upload status.  Uploads will fail f
 It's important to note that if you run the script more than once, and you don't specify a range of failed posts, the script will happily post duplicate notes!
 
 The script also converts WP categories to tags, and also appends the "published" tag used by Postach.io to turn the new notes into posts immediately (at some point I'll make this optional, probably).
+
+Reference:
+
+*  http://luisrei.com/post/17376030577/out-of-wordpress-com-and-into-evernote-com
+*  http://virantha.com/2013/11/04/creating-new-notes-and-attaching-files-using-evernotes-python-api/
+*  http://dev.evernote.com/doc/articles/enml.php
+*  http://dev.evernote.com/doc/start/python.php
