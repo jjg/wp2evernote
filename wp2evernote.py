@@ -51,6 +51,9 @@ def create_note(post):
 	for tag in post['tags']:
 		tags.append(tag)
 		
+	# add the magic 'published' tag to make it a blog post
+	tags.append('published')
+	
 	note.tagNames = tags
 	
 	# TODO: create attachments from WP urls (images, etc.)
@@ -95,24 +98,25 @@ def create_note(post):
 	# set the body
 	note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
 	note.content += '<en-note>'
-	note.content += scrubbed_content #post['text'].replace('\n', '<br/>')
+	note.content += scrubbed_content
 	note.content += '</en-note>'
 	
 	return note
 	
 	
 def upload_note(note):
-	dev_token = 'S=s1:U=8d631:E=14a2adb30d1:C=142d32a04d4:P=1cd:A=en-devtoken:V=2:H=0dcc95fb7ef5991a98ec6c76605d53dd'
-	client = EvernoteClient(token=dev_token)
+	client = EvernoteClient(token=auth_token)
 	noteStore = client.get_note_store()
 	note = noteStore.createNote(note)
 	
+
+if len(sys.argv) >= 3:
+
+	# get the auth token
+	auth_token = sys.argv[1]
 	
-
-if len(sys.argv) >= 2:
-
 	# get the export file to process
-	infile = sys.argv[1]
+	infile = sys.argv[2]
 
 	# read posts from input file
 	dom = minidom.parse(infile)
@@ -135,12 +139,12 @@ if len(sys.argv) >= 2:
 	# resume if post # is specified
 	starting_post = 0
 	if len(sys.argv) > 2:
-		starting_post = int(sys.argv[2])
+		starting_post = int(sys.argv[3])
 		
 	# stop early if specified
 	ending_post = len(notes)
 	if len(sys.argv) > 3:
-		ending_post = int(sys.argv[3])
+		ending_post = int(sys.argv[4])
 	
 	if starting_post != 0:
 		print 'starting at post %d' % starting_post
@@ -178,4 +182,4 @@ if len(sys.argv) >= 2:
 	
 else:
 	
-	print 'usage: wp2evernote <wordpress export.xml> <starting post> <ending post>\n'
+	print 'usage: wp2evernote <token> <wordpress export.xml> <starting post> <ending post>\n'
