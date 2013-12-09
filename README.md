@@ -4,7 +4,7 @@ Be warned, this script is very primative at this stage.  Someday it will do a be
 
 ###Useage:###
 
-wp2evernote <token> <wordpress export.xml> <starting post> <ending post>
+     wp2evernote <token> <wordpress export.xml> <starting post> <ending post>
 
 *  token: your developer token
 *  wordpress export.xml: the file you exported from Wordpress
