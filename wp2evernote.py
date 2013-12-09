@@ -60,7 +60,22 @@ def create_note(post):
 	
 	# clean-up the post's text
 	scrubbed_content = post['text'].encode('utf-8')
+	
+	# convert newlines to breaks
 	scrubbed_content = scrubbed_content.replace('\n', '<br/>')
+	
+	# remove class directives (ie: class="size-medium wp-image-1756")
+	while scrubbed_content.find('class=') > 0:
+		
+		start_idx = scrubbed_content.find('class=')
+		print start_idx
+		
+		end_idx = scrubbed_content.find('"', start_idx + 7)
+		print end_idx
+		
+		scrubbed_content = scrubbed_content[:start_idx] + scrubbed_content[end_idx + 2:]
+		
+	#scrubbed_content = scrubbed_content.replace('class=', 'ass=')
 	
 	# set the body
 	note.content = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
@@ -96,7 +111,7 @@ for post in posts:
 	notes.append(create_note(post))
 	
 # debug
-#print notes[517]
+print notes[517]
 #print notes[11]
 
 # try uploading one
