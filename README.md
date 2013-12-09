@@ -1,4 +1,4 @@
-A simple script to import Wordpress posts into Evernote, designed to produce posts for Postach.io.
+A simple script to import Wordpress posts into Evernote, designed to produce posts for (http://postach.io)[Postach.io].
 
 Be warned, this script is very primative at this stage.  Someday it will do a better job, unless someone else writes something better, then I'll probably just use that instead ;)
 
