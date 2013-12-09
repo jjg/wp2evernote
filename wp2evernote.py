@@ -75,6 +75,14 @@ def create_note(post):
 		
 		scrubbed_content = scrubbed_content[:start_idx] + scrubbed_content[end_idx + 2:]
 		
+	# remove captions
+	while scrubbed_content.find('[caption') > 0:
+	
+		start_idx = scrubbed_content.find('[caption')
+		end_idx = scrubbed_content.find(']', start_idx)
+		
+		scrubbed_content = scrubbed_content[:start_idx] + scrubbed_content[end_idx + 1:]
+		
 	#scrubbed_content = scrubbed_content.replace('class=', 'ass=')
 	
 	# set the body
@@ -115,7 +123,7 @@ print notes[517]
 #print notes[11]
 
 # try uploading one
-upload_note(notes[517])
+#upload_note(notes[517])
 
 
 
