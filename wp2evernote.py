@@ -106,7 +106,7 @@ def create_note(post):
 	
 	
 def upload_note(note):
-	client = EvernoteClient(token=auth_token)
+	client = EvernoteClient(token=auth_token, sandbox=False)
 	noteStore = client.get_note_store()
 	note = noteStore.createNote(note)
 	
@@ -117,7 +117,7 @@ if len(sys.argv) >= 3:
 	auth_token = sys.argv[1]
 	
 	# ask user to pick a notebook
-	client = EvernoteClient(token=auth_token)
+	client = EvernoteClient(token=auth_token, sandbox=False)
 	noteStore = client.get_note_store()
 	notebooks = noteStore.listNotebooks()
 	
@@ -153,12 +153,12 @@ if len(sys.argv) >= 3:
 	# upload notes	
 	# resume if post # is specified
 	starting_post = 0
-	if len(sys.argv) > 2:
+	if len(sys.argv) > 3:
 		starting_post = int(sys.argv[3])
 		
 	# stop early if specified
 	ending_post = len(notes)
-	if len(sys.argv) > 3:
+	if len(sys.argv) > 4:
 		ending_post = int(sys.argv[4])
 	
 	if starting_post != 0:
