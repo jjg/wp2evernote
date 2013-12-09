@@ -11,6 +11,7 @@ from xml.dom import minidom
 import evernote.edam.userstore.constants as UserStoreConstants
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
+import time
 
 
 # get the export file to process
@@ -42,8 +43,9 @@ def create_note(post):
 	# create a new note
 	note = Types.Note()
 	
-	# set the date
-	note.date = post['date']
+	# set the date (converted from ex: Wed, 28 Aug 2013 15:08:10 +0000)
+	pattern = '%a, %d %b %Y %H:%M:%S +0000'
+	note.created = int(time.mktime(time.strptime(post['date'], pattern))) * 1000
 	
 	# set the title
 	note.title = post['title']
