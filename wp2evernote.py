@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 
 # wp2evernote.py
 # import Wordpress posts into Evernote as notes
@@ -12,10 +14,7 @@ import evernote.edam.userstore.constants as UserStoreConstants
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import time
-from bs4 import BeautifulSoup, Tag
-
-reload(sys)
-sys.setdefaultencoding('utf-8')
+from bs4 import BeautifulSoup
 
 
 def get_post(node):
@@ -58,12 +57,12 @@ def create_note(post):
 	note.created = int(time.mktime(time.strptime(post['date'], pattern))) * 1000
 
 	# set the title
-	note.title = post['title']
+	note.title = post['title'].encode('utf-8')
 
 	# add tags
 	tags = []
 	for tag in post['tags']:
-		tags.append(tag)
+		tags.append(tag.encode('utf-8'))
 
         # check if a page, add relative tag
         #if post['type'] == 'page' :
@@ -79,17 +78,22 @@ def create_note(post):
 	# TODO: update body URL's to match attachment targets
 
 	# clean-up the post's text
-	#scrubbed_content = post['text']
-	scrubbed_content = post['text'].encode('utf-8')
+	scrubbed_content = post['text']
 
-        # remove all prohibited attributes
+        # remove all prohibited attributes with bs4
         proibithed_attrs = ['id','class','onclick','ondbliclick','accesskey','data','dynsrc','tabindex']
+        proibithed_elements = ['applet','base','basfont','bgsound','blink','body','button','dir','embed','fieldset','form','frame','frameset','head','html','iframe','ilayer','input','isindex','label','layer','legend','link','marquee','menu','meta','noframes','noscript','object','optgroup','option','param','plaintext','script','select','style','textarea','xml']
         soup = BeautifulSoup(scrubbed_content)
 
         for bad_attr in proibithed_attrs :
             for value in soup.findAll() :
                 del(value[bad_attr])
-        scrubbed_content = soup.get_text()
+
+        bad_elements = soup.findAll(proibithed_elements)
+        [element.extract() for element in bad_elements]
+
+        # get back to str
+        scrubbed_content = str(soup)
 
 	# convert newlines to breaks
 	scrubbed_content = scrubbed_content.replace('\n', '<br/>')
@@ -97,7 +101,7 @@ def create_note(post):
 	# close br's
 	scrubbed_content = scrubbed_content.replace('<br>', '<br/>')
 
-	# close hr's
+	# clos hr's
 	scrubbed_content = scrubbed_content.replace('<hr>', '<hr/>')
 
         while scrubbed_content.find('[caption') > 0:
@@ -212,7 +216,7 @@ if len(sys.argv) >= 3:
 				print sys.exc_info()
 				#print 'error uploading note %d' % note_idx
 				upload_errors += 1
-				sys.exit(1)
+				#sys.exit(1)
 
 		if note_idx == ending_post:
 			break
