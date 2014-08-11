@@ -12,6 +12,10 @@ import evernote.edam.userstore.constants as UserStoreConstants
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import time
+from bs4 import BeautifulSoup, Tag
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 def get_post(node):
@@ -75,7 +79,17 @@ def create_note(post):
 	# TODO: update body URL's to match attachment targets
 
 	# clean-up the post's text
+	#scrubbed_content = post['text']
 	scrubbed_content = post['text'].encode('utf-8')
+
+        # remove all prohibited attributes
+        proibithed_attrs = ['id','class','onclick','ondbliclick','accesskey','data','dynsrc','tabindex']
+        soup = BeautifulSoup(scrubbed_content)
+
+        for bad_attr in proibithed_attrs :
+            for value in soup.findAll() :
+                del(value[bad_attr])
+        scrubbed_content = soup.get_text()
 
 	# convert newlines to breaks
 	scrubbed_content = scrubbed_content.replace('\n', '<br/>')
@@ -86,19 +100,7 @@ def create_note(post):
 	# close hr's
 	scrubbed_content = scrubbed_content.replace('<hr>', '<hr/>')
 
-	# remove class directives (ie: class="size-medium wp-image-1756")
-	while scrubbed_content.find('class=') > 0:
-
-		start_idx = scrubbed_content.find('class=')
-		#print start_idx
-
-		end_idx = scrubbed_content.find('"', start_idx + 7)
-		#print end_idx
-
-		scrubbed_content = scrubbed_content[:start_idx] + scrubbed_content[end_idx + 2:]
-
-	# remove caption tags
-	while scrubbed_content.find('[caption') > 0:
+        while scrubbed_content.find('[caption') > 0:
 
 		start_idx = scrubbed_content.find('[caption')
 		end_idx = scrubbed_content.find(']', start_idx)
@@ -198,7 +200,7 @@ if len(sys.argv) >= 3:
 	for note in notes:
 
 		if note_idx >= starting_post:
-			sys.stdout.write('%d' % note_idx)
+			sys.stdout.write('%d %s' % (note_idx, note.title))
 
 			try:
 				upload_note(note)
@@ -207,10 +209,10 @@ if len(sys.argv) >= 3:
 			except:
 				sys.stdout.write('\tfailed\n')
 				#print note
-				#print sys.exc_info()
+				print sys.exc_info()
 				#print 'error uploading note %d' % note_idx
 				upload_errors += 1
-				#sys.exit(1)
+				sys.exit(1)
 
 		if note_idx == ending_post:
 			break
