@@ -15,6 +15,9 @@ import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import time
 from bs4 import BeautifulSoup
+from urllib2 import urlopen
+import hashlib
+import binascii
 
 
 def get_post(node):
@@ -42,9 +45,55 @@ def get_post(node):
 
         return post
 
-def get_image(image_data):
+def add_images(list_of_attachments, soup, note):
 #took from https://github.com/evernote/evernote-sdk-python/blob/master/sample/client/EDAMTest.py
-        pass
+
+        note.resources = []
+        for img in list_of_attachments :
+
+            try :
+
+                # get image from old site
+                image = urlopen(img['src']).read()
+
+                #hash it in order ro attach
+                md5 = hashlib.md5()
+                md5.update(image)
+                hash = md5.digest()
+
+                # make evernote data Type
+                data = Types.Data()
+                data.size = len(image)
+                data.bodyHash = hash
+                data.body = image
+
+                # create the resource attachment
+                resource = Types.Resource()
+                ext = img['src'].split('.')[-1]
+                if ext in ['jpg','JPG','JPEG'] :
+                    ext = 'jpeg'
+                resource.mime = 'image/' + ext
+                resource.data = data
+
+                # Now, add the new Resource to the note's list of resources
+                note.resources += [resource]
+
+                # To display the Resource as part of the note's content, include an <en-media>
+                # tag in the note's ENML content. The en-media tag identifies the corresponding
+                # Resource using the MD5 hash.
+                hash_hex = binascii.hexlify(hash)
+                # And now change <img/> in <en-media/>, adapting to evernote layout
+                del img['src']
+                img['type'] = resource.mime
+                img['hash'] = hash_hex
+                img.name = 'en-media'
+
+            except :
+
+                print img['src'] + ' has bad url'
+                pass
+
+        return soup, note
 
 def create_note(post):
 
@@ -74,9 +123,6 @@ def create_note(post):
 
 	note.tagNames = tags
 
-	# TODO: create attachments from WP urls (images, etc.)
-	# TODO: update body URL's to match attachment targets
-
 	# clean-up the post's text
 	scrubbed_content = post['text']
 
@@ -91,6 +137,10 @@ def create_note(post):
 
         bad_elements = soup.findAll(proibithed_elements)
         [element.extract() for element in bad_elements]
+
+        # get images from old site (the site need to because you fetch the images in order to embed inside the note)
+        images = soup.findAll('img')
+        soup, note = add_images(images, soup, note)
 
         # get back to str
         scrubbed_content = str(soup)
@@ -171,7 +221,6 @@ if len(sys.argv) >= 3:
 
                 #page = get_page(node)
                 #pages.append(page)
-
 
 
 	print 'processing %d posts' % len(posts)
