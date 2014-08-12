@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 
 # wp2evernote.py
 # import Wordpress posts into Evernote as notes
@@ -12,6 +14,10 @@ import evernote.edam.userstore.constants as UserStoreConstants
 import evernote.edam.type.ttypes as Types
 from evernote.api.client import EvernoteClient
 import time
+from bs4 import BeautifulSoup
+from urllib2 import urlopen
+import hashlib
+import binascii
 
 
 def get_post(node):
@@ -39,9 +45,55 @@ def get_post(node):
 
         return post
 
-def get_image(image_data):
+def add_images(list_of_attachments, soup, note):
 #took from https://github.com/evernote/evernote-sdk-python/blob/master/sample/client/EDAMTest.py
-        pass
+
+        note.resources = []
+        for img in list_of_attachments :
+
+            try :
+
+                # get image from old site
+                image = urlopen(img['src']).read()
+
+                #hash it in order ro attach
+                md5 = hashlib.md5()
+                md5.update(image)
+                hash = md5.digest()
+
+                # make evernote data Type
+                data = Types.Data()
+                data.size = len(image)
+                data.bodyHash = hash
+                data.body = image
+
+                # create the resource attachment
+                resource = Types.Resource()
+                ext = img['src'].split('.')[-1]
+                if ext in ['jpg','JPG','JPEG'] :
+                    ext = 'jpeg'
+                resource.mime = 'image/' + ext
+                resource.data = data
+
+                # Now, add the new Resource to the note's list of resources
+                note.resources += [resource]
+
+                # To display the Resource as part of the note's content, include an <en-media>
+                # tag in the note's ENML content. The en-media tag identifies the corresponding
+                # Resource using the MD5 hash.
+                hash_hex = binascii.hexlify(hash)
+                # And now change <img/> in <en-media/>, adapting to evernote layout
+                del img['src']
+                img['type'] = resource.mime
+                img['hash'] = hash_hex
+                img.name = 'en-media'
+
+            except :
+
+                print img['src'] + ' has bad url'
+                pass
+
+        return soup, note
 
 def create_note(post):
 
@@ -54,12 +106,12 @@ def create_note(post):
 	note.created = int(time.mktime(time.strptime(post['date'], pattern))) * 1000
 
 	# set the title
-	note.title = post['title']
+	note.title = post['title'].encode('utf-8')
 
 	# add tags
 	tags = []
 	for tag in post['tags']:
-		tags.append(tag)
+		tags.append(tag.encode('utf-8'))
 
         # check if a page, add relative tag
         #if post['type'] == 'page' :
@@ -71,11 +123,27 @@ def create_note(post):
 
 	note.tagNames = tags
 
-	# TODO: create attachments from WP urls (images, etc.)
-	# TODO: update body URL's to match attachment targets
-
 	# clean-up the post's text
-	scrubbed_content = post['text'].encode('utf-8')
+	scrubbed_content = post['text']
+
+        # remove all prohibited attributes with bs4
+        proibithed_attrs = ['id','class','onclick','ondbliclick','accesskey','data','dynsrc','tabindex']
+        proibithed_elements = ['applet','base','basfont','bgsound','blink','body','button','dir','embed','fieldset','form','frame','frameset','head','html','iframe','ilayer','input','isindex','label','layer','legend','link','marquee','menu','meta','noframes','noscript','object','optgroup','option','param','plaintext','script','select','style','textarea','xml']
+        soup = BeautifulSoup(scrubbed_content)
+
+        for bad_attr in proibithed_attrs :
+            for value in soup.findAll() :
+                del(value[bad_attr])
+
+        bad_elements = soup.findAll(proibithed_elements)
+        [element.extract() for element in bad_elements]
+
+        # get images from old site (the site need to because you fetch the images in order to embed inside the note)
+        images = soup.findAll('img')
+        soup, note = add_images(images, soup, note)
+
+        # get back to str
+        scrubbed_content = str(soup)
 
 	# convert newlines to breaks
 	scrubbed_content = scrubbed_content.replace('\n', '<br/>')
@@ -83,22 +151,10 @@ def create_note(post):
 	# close br's
 	scrubbed_content = scrubbed_content.replace('<br>', '<br/>')
 
-	# close hr's
+	# clos hr's
 	scrubbed_content = scrubbed_content.replace('<hr>', '<hr/>')
 
-	# remove class directives (ie: class="size-medium wp-image-1756")
-	while scrubbed_content.find('class=') > 0:
-
-		start_idx = scrubbed_content.find('class=')
-		#print start_idx
-
-		end_idx = scrubbed_content.find('"', start_idx + 7)
-		#print end_idx
-
-		scrubbed_content = scrubbed_content[:start_idx] + scrubbed_content[end_idx + 2:]
-
-	# remove caption tags
-	while scrubbed_content.find('[caption') > 0:
+        while scrubbed_content.find('[caption') > 0:
 
 		start_idx = scrubbed_content.find('[caption')
 		end_idx = scrubbed_content.find(']', start_idx)
@@ -167,7 +223,6 @@ if len(sys.argv) >= 3:
                 #pages.append(page)
 
 
-
 	print 'processing %d posts' % len(posts)
 
 	# generate notes
@@ -198,7 +253,7 @@ if len(sys.argv) >= 3:
 	for note in notes:
 
 		if note_idx >= starting_post:
-			sys.stdout.write('%d' % note_idx)
+			sys.stdout.write('%d %s' % (note_idx, note.title))
 
 			try:
 				upload_note(note)
@@ -207,7 +262,7 @@ if len(sys.argv) >= 3:
 			except:
 				sys.stdout.write('\tfailed\n')
 				#print note
-				#print sys.exc_info()
+				print sys.exc_info()
 				#print 'error uploading note %d' % note_idx
 				upload_errors += 1
 				#sys.exit(1)
