@@ -225,12 +225,6 @@ if len(sys.argv) >= 3:
 
 	print 'processing %d posts' % len(posts)
 
-	# generate notes
-	notes = []
-	for post in posts:
-		notes.append(create_note(post))
-
-
 	# upload notes
 	# resume if post # is specified
 	starting_post = 0
@@ -238,7 +232,7 @@ if len(sys.argv) >= 3:
 		starting_post = int(sys.argv[3])
 
 	# stop early if specified
-	ending_post = len(notes)
+	ending_post = len(posts)
 	if len(sys.argv) > 4:
 		ending_post = int(sys.argv[4])
 
@@ -250,9 +244,13 @@ if len(sys.argv) >= 3:
 
 	note_idx = 0
 	upload_errors = 0
-	for note in notes:
+
+        # generate notes
+	for post in posts:
 
 		if note_idx >= starting_post:
+
+		        note = create_note(post)
 			sys.stdout.write('%d %s' % (note_idx, note.title))
 
 			try:
