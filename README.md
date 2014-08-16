@@ -2,6 +2,10 @@ A simple script to import Wordpress posts into Evernote, designed to produce pos
 
 Be warned, this script is very primative at this stage.  Someday it will do a better job, unless someone else writes something better, then I'll probably just use that instead ;)
 
+#####Dependencies:#####
+
+From commit 023f8f7a9e8044e03bc51be7dec77e38cc20f1b4 [Beautifulsoup](http://www.crummy.com/software/BeautifulSoup/) is needed as dependency in order to grab and upload images from your old Wordpress site to Postach.io.
+
 ###Useage:###
 
      wp2evernote <token> <wordpress export.xml> <starting post> <ending post>
